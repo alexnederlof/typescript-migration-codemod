@@ -1,10 +1,10 @@
-import fs from 'fs-extra';
 import * as t from '@babel/types';
+import fs from 'fs-extra';
 import * as recast from 'recast';
-import * as recastFlowParser from 'recast/parsers/flow';
-import recastOptions from '../recast_options';
-import migrateToTypescript from './migrate_to_typescript';
-import MigrationReporter from './migration_reporter';
+import * as recastFlowParser from 'recast/parsers/flow.js';
+import recastOptions from '../recast_options.js';
+import migrateToTypescript from './migrate_to_typescript.js';
+import MigrationReporter from './migration_reporter.js';
 
 export default async function processBatchAsync(
     reporter: MigrationReporter,
@@ -16,7 +16,7 @@ export default async function processBatchAsync(
 
             const fileText = fileBuffer.toString('utf8');
             const file: t.File = recast.parse(fileText, {parser: recastFlowParser});
-            const fileStats = {hasJsx: false};
+            const fileStats = {hasJsx: filePath.endsWith("jsx")};
 
             await migrateToTypescript(reporter, filePath, file, fileStats);
 
@@ -29,7 +29,8 @@ export default async function processBatchAsync(
             await fs.writeFile(tsFilePath, newFileText);
         } catch (error) {
             // Report errors, but don’t crash the worker...
-            console.error(error);
+            console.error(`Cannot read ${filePath}`, error)
+            // console.error(error);
         }
     }));
 }

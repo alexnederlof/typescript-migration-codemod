@@ -1,7 +1,7 @@
-import path from 'path';
-import minimatch from 'minimatch';
 import builtinModules from 'builtin-modules';
-import {SOURCE} from '../paths';
+import minimatch from 'minimatch';
+import path from 'path';
+import { SOURCE } from '../paths.js';
 
 const builtinModuleSet = new Set(builtinModules);
 

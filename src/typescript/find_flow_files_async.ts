@@ -1,3 +1,5 @@
+import fs from 'fs-extra';
+import path from 'path';
 /**
  * This file is forked from a file I (@calebmer) wrote when working on a large Flow migration
  * project: [`flow-upgrade/src/findFlowFiles.js`][1]. It needed to be hyper-optimized for Facebook
@@ -6,8 +8,6 @@
  * [1]: https://github.com/facebook/flow/blob/6491b1ac744dcac82ad07f4d9ff9deb6b977275d/packages/flow-upgrade/src/findFlowFiles.js
  */
 
-import path from 'path';
-import fs from 'fs-extra';
 
 /**
  * How many bytes we should look at for the Flow pragma.
@@ -87,7 +87,7 @@ export default function findFlowFilesAsync(
                     }
                 } else if (stats.isFile()) {
                     // Otherwise if this is a JavaScript file...
-                    if (fileName.endsWith('.js')) {
+                    if (fileName.endsWith('.js') || fileName.endsWith('.jsx')) {
                         // Then process the file path as JavaScript.
                         processJavaScriptFilePath(filePath, stats.size);
                     }
@@ -124,7 +124,7 @@ export default function findFlowFilesAsync(
                     }
                     // If the buffer has the @flow pragma then add the file path to our
                     // final file paths array.
-                    if (buffer.includes('// @flow')) {
+                    if (buffer.includes('// @flow') || buffer.includes('* @flow')) {
                         filePaths.push(filePath);
                     }
                     // Close the file.

@@ -1,10 +1,10 @@
-import fs from 'fs-extra';
 import * as t from '@babel/types';
+import fs from 'fs-extra';
 import * as recast from 'recast';
-import * as recastFlowParser from 'recast/parsers/flow';
-import recastOptions from '../recast_options';
-import migrateToEsModules from './migrate_to_es_modules';
-import MigrationReporter from './migration_reporter';
+import * as recastFlowParser from 'recast/parsers/flow.js';
+import recastOptions from '../recast_options.js';
+import migrateToEsModules from './migrate_to_es_modules.js';
+import MigrationReporter from './migration_reporter.js';
 
 export default async function processBatchAsync(
     reporter: MigrationReporter,

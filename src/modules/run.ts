@@ -1,10 +1,11 @@
-import path from 'path';
-import os from 'os';
 import cluster from 'cluster';
-import {SOURCE, IGNORED_DIRS, CWD} from '../paths';
-import findJsFilesAsync from './find_js_files_async';
-import MigrationReporter, {MigrationReport} from './migration_reporter';
-import processBatchAsync from './process_batch_async';
+import os from 'os';
+import path from 'path';
+import { CWD, IGNORED_DIRS, SOURCE } from '../paths.js';
+import { AnyMessage } from '../typescript/run.js';
+import findJsFilesAsync from './find_js_files_async.js';
+import MigrationReporter, { MigrationReport } from './migration_reporter.js';
+import processBatchAsync from './process_batch_async.js';
 
 /** The number of CPUs our computer has. */
 const CPUS = os.cpus().length;
@@ -128,10 +129,11 @@ async function runWorkerAsync() {
   const reporter = new MigrationReporter();
 
   process.on('message', (message) => {
-    switch (message.type) {
+    let m: AnyMessage = message as AnyMessage
+    switch (m.type) {
       // Process a batch of files and ask for more...
       case 'batch': {
-        processBatchAsync(reporter, message.batch).then(
+        processBatchAsync(reporter, m.batch).then(
           () => process.send!({type: 'next'}),
           (error) => {
             console.error(error);

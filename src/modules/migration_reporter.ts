@@ -1,7 +1,7 @@
-import path from 'path';
 import * as t from '@babel/types';
-import {CWD} from '../paths';
-import * as allowlists from './allowlists';
+import path from 'path';
+import { CWD } from '../paths.js';
+import * as allowlists from './allowlists.js';
 
 /**
  * A location that also includes the file path.

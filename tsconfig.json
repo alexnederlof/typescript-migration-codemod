@@ -1,19 +1,14 @@
 {
+  "extends": "@tsconfig/node18/tsconfig.json",
+
   "compilerOptions": {
-    "outDir": "./transpiled",
-    "target": "es2019",
-    "module": "commonjs",
-    "esModuleInterop": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strictBindCallApply": true,
-    "strictPropertyInitialization": true,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
-  }
+    "module": "node16",
+    "moduleResolution": "node16",
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "outDir": "transpiled",
+    "lib": ["es2022"],
+    "jsx": "react"
+  },
+  "include": ["src"]
 }

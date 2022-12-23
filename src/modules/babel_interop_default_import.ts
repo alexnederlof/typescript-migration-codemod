@@ -1,7 +1,7 @@
-import path from 'path';
 import builtinModules from 'builtin-modules';
-import {CWD} from '../paths';
-import {babelInteropDefaultImportOverrides} from './allowlists';
+import path from 'path';
+import { CWD } from '../paths.js';
+import { babelInteropDefaultImportOverrides } from './allowlists.js';
 
 const builtinModuleSet = new Set(builtinModules);
 

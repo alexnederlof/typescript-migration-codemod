@@ -1,9 +1,9 @@
-import path from 'path';
-import childProcess from 'child_process';
-import chalk from 'chalk';
+import { parse } from '@babel/parser';
 import * as t from '@babel/types';
-import {parse} from '@babel/parser';
-import {SOURCE} from '../paths';
+import chalk from 'chalk';
+import childProcess from 'child_process';
+import path from 'path';
+import { SOURCE } from '../paths.js';
 
 /**
  * Runs Flow to get the inferred type at a given position. Uses the Flow server so once the Flow
