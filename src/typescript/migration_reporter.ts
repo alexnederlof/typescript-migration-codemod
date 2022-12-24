@@ -21,6 +21,7 @@ class MigrationReporter {
             objectPropertyWithInternalName: mergeArrays('objectPropertyWithInternalName', reports),
             objectPropertyWithMinusVariance: mergeArrays('objectPropertyWithMinusVariance', reports),
             unsupportedTypeCast: mergeArrays('unsupportedTypeCast', reports),
+            errors: mergeArrays('errors', reports)
         };
     }
 
@@ -76,6 +77,7 @@ class MigrationReporter {
     private readonly _objectPropertyWithInternalName: Array<Location> = [];
     private readonly _objectPropertyWithMinusVariance: Array<Location> = [];
     private readonly _unsupportedTypeCast: Array<Location> = [];
+    private readonly _errors: Array<[string, string]> = []
 
     typeParameterWithVariance(filePath: string, {start, end}: t.SourceLocation) {
         this._typeParameterWithVariance.push({filePath, start, end});
@@ -93,12 +95,17 @@ class MigrationReporter {
         this._unsupportedTypeCast.push({filePath, start, end});
     }
 
+    reportError(filePath: string, error: Error | string) {
+        this._errors.push([filePath, `${error}`])
+    }
+
     generateReport(): MigrationReport {
         return {
             typeParameterWithVariance: this._typeParameterWithVariance,
             objectPropertyWithInternalName: this._objectPropertyWithInternalName,
             objectPropertyWithMinusVariance: this._objectPropertyWithMinusVariance,
             unsupportedTypeCast: this._unsupportedTypeCast,
+            errors: this._errors
         };
     }
 }
@@ -111,6 +118,7 @@ export type MigrationReport = {
     objectPropertyWithInternalName: Array<Location>,
     objectPropertyWithMinusVariance: Array<Location>,
     unsupportedTypeCast: Array<Location>,
+    errors: Array<[string, string]>
 };
 
 export default MigrationReporter;

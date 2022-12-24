@@ -55,17 +55,13 @@ async function runPrimaryAsync() {
   // 5. The worker responds with a report of its activities.
   // 6. Primary kills the worker.
   for (let i = 0; i < CPUS; i++) {
-    const initialBatch = popBatch();
-    if (initialBatch === null) break; // Stop spawning workers if we have no more batches!
+    // const initialBatch = popBatch();
+    // if (initialBatch === null) break; // Stop spawning workers if we have no more batches!
 
     let timeoutId: NodeJS.Timeout | null = null;
 
     const worker = cluster.fork();
-    worker.on("online", () => {
-      console.log("Send initial batch");
-      sendBatch(initialBatch);
-    });
-
+    
     worker.on("message", (message) => {
       if (timeoutId !== null) {
         clearTimeout(timeoutId);
@@ -123,13 +119,19 @@ async function runPrimaryAsync() {
   // console for debugging.
 
   async function finish() {
+    console.log(`Merging reports from ${reports.length} workers.`);
+    const mergedReport = MigrationReporter.mergeReports(reports);
+    const errorred = Object.fromEntries(mergedReport.errors);
+    
     console.log("Deleting all the old files.");
-    for (const flowFilePath of flowFilePathsCopy) {
+    for (const flowFilePath of flowFilePathsCopy.filter(p => !errorred[p])) {
       await fs.remove(flowFilePath);
     }
 
-    console.log(`Merging reports from ${reports.length} workers.`);
-    const mergedReport = MigrationReporter.mergeReports(reports);
+    for (const [file, er] of mergedReport.errors) {
+      await fs.writeFile(file + ".error.txt", er)
+    }
+
     MigrationReporter.logReport(mergedReport);
   }
 }
@@ -141,9 +143,8 @@ export type AnyMessage = ReportMessage | NextMessage | BatchMessage;
 
 async function runWorkerAsync() {
   const reporter = new MigrationReporter();
-
+  process.send!({ type: "next" })
   process.on("message", (message) => {
-    console.log("Got", message);
     let m = message as AnyMessage;
     switch (m.type) {
       // Process a batch of files and ask for more...

@@ -25,12 +25,10 @@ export default async function processBatchAsync(
             const newFileText = newFileTextWithFlowComment
                 .replace(/\/\/ @flow.*\n+/, '')
                 .replace(/\/\/ flow-disable-next-line/g, '// @ts-ignore');
-            const tsFilePath = filePath.replace(/\.js$/, fileStats.hasJsx ? '.tsx' : '.ts');
+            const tsFilePath = filePath.replace(/\.jsx?$/, fileStats.hasJsx ? '.tsx' : '.ts');
             await fs.writeFile(tsFilePath, newFileText);
         } catch (error) {
-            // Report errors, but don’t crash the worker...
-            console.error(`Cannot read ${filePath}`, error)
-            // console.error(error);
+            reporter.reportError(filePath, error as Error)
         }
     }));
 }
