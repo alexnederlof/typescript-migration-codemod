@@ -210,7 +210,7 @@ export default function migrateToTypeScript(
 
       const body = migrateType(reporter, filePath, path.node.body);
       if (body.type !== "TSTypeLiteral")
-        throw new Error(`Unexpected AST node: ${JSON.stringify(body.type)}`);
+        throw new Error(`Unexpected AST node: ${JSON.stringify(body.type)} instead of TSTypeLiteral`);
 
       replaceWith(
         path,
@@ -1000,7 +1000,7 @@ function actuallyMigrateType(
       const tsType = migrateType(reporter, filePath, flowType.argument);
 
       if (tsType.type !== "TSTypeReference")
-        throw new Error(`Unexpected AST node: ${JSON.stringify(tsType.type)}`);
+        throw new Error(`Unexpected AST node: ${JSON.stringify(tsType.type)} instead of TSTypeReference`);
       if (tsType.typeParameters)
         throw new Error("Unexpected type parameters on `typeof` argument.");
 
@@ -1169,7 +1169,7 @@ function actuallyMigrateObjectMember(
       } else {
         if (tsValue.type !== "TSFunctionType") {
           throw new Error(
-            `Unexpected AST node: ${JSON.stringify(tsValue.type)}`
+            `Unexpected AST node: ${JSON.stringify(tsValue.type)}. I wanted TSFunctionType`
           );
         }
 

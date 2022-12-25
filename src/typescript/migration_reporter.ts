@@ -96,7 +96,11 @@ class MigrationReporter {
     }
 
     reportError(filePath: string, error: Error | string) {
+        if (error instanceof Error) {
+            this._errors.push([filePath, `${error}, ${error.stack}`]);
+        } else {
         this._errors.push([filePath, `${error}`])
+        }
     }
 
     generateReport(): MigrationReport {

@@ -12,8 +12,8 @@
   "dependencies": {
     "@babel/parser": "^7.20.7",
     "@babel/traverse": "^7.20.10",
-    "@types/babel__traverse": "^7.18.3",
     "@babel/types": "^7.20.7",
+    "@types/babel__traverse": "^7.18.3",
     "builtin-modules": "^3.3.0",
     "camelcase": "^7.0.1",
     "chalk": "^5.2.0",
