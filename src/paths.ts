@@ -8,7 +8,7 @@ export const CWD = process.cwd();
 /**
  * The Hyperbase source directory.
  */
-export const SOURCE = path.resolve('../latitude/src');
+export const SOURCE = path.resolve('../../latitude/src');
 
 /**
  * Directories we ignore when migrating code.

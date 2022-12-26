@@ -1036,9 +1036,19 @@ function actuallyMigrateType(
     case "VoidTypeAnnotation":
       return t.tsVoidKeyword();
 
+    
+    case "IndexedAccessType": { 
+      return t.tsIndexedAccessType(
+        migrateType(reporter, filePath, flowType.objectType),
+        migrateType(reporter, filePath, flowType.indexType)
+      );
+    }
+  
+
     default: {
       const never = flowType;
-      throw new Error(`Unexpected AST node: ${JSON.stringify(never["type"])}`);
+      let locStart = flowType.loc?.start;
+      throw new Error(`Unexpected AST node: ${JSON.stringify(never["type"])} at ${filePath}:${locStart?.line}:${locStart?.column}`);
     }
   }
 }
@@ -1124,6 +1134,7 @@ function actuallyMigrateObjectMember(
     | t.ObjectTypeIndexer
     | t.ObjectTypeCallProperty
     | t.ObjectTypeInternalSlot
+    | t.IndexedAccessType
 ): t.TSTypeElement {
   switch (flowMember.type) {
     case "ObjectTypeProperty": {
@@ -1222,6 +1233,9 @@ function actuallyMigrateObjectMember(
       throw new Error(
         `Unsupported AST node: ${JSON.stringify(flowMember.type)}`
       );
+
+    case "IndexedAccessType":
+      throw new Error("Learning to deal with " + JSON.stringify(flowMember))
 
     default: {
       const never: never = flowMember;
