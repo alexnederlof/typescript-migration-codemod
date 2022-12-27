@@ -100,6 +100,11 @@ export default function migrateToTypeScript(
 
     ImportDeclaration(path) {
       // `import type {...} from` => `import {...} from`
+      if (path.node.source.value.startsWith('.')) {
+        path.node.source.value += ".js";
+      }
+
+      
       if (path.node.importKind === "type") {
         path.node.importKind = "value";
         return;
