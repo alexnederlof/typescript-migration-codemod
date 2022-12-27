@@ -1,8 +1,9 @@
 import traverse, { NodePath } from '@babel/traverse';
 import * as t from '@babel/types';
+import path from 'path';
+import { SOURCE } from '../paths.js';
 import flowTypeAtPos from './flow_type_at_pos.js';
 import MigrationReporter from './migration_reporter.js';
-
 
 export default function migrateToTypeScript(
   reporter: MigrationReporter,
@@ -98,33 +99,53 @@ export default function migrateToTypeScript(
         |  Declarations and Statements                                                             |
         \* -------------------------------------------------------------------------------------- */
 
-    ImportDeclaration(path) {
+    ImportDeclaration(importPath) {
       // `import type {...} from` => `import {...} from`
-      if (path.node.source.value.startsWith('.')) {
-        path.node.source.value += ".js";
+
+      if (importPath.node.source.value === "styles") {
+        importPath.node.source.value = './styles'
       }
 
-      
-      if (path.node.importKind === "type") {
-        path.node.importKind = "value";
+      if (importPath.node.source.value.startsWith("latitude/")) {
+        let destination = importPath.node.source.value.replace(
+          "latitude/",
+          SOURCE + "/"
+        );
+        let resolved = path.relative(filePath, destination);
+        // For some reason, it always starts with two dots where it should be one
+        resolved = resolved.replace("..", ".");
+        importPath.node.source.value = path.normalize(resolved);
+      }
+
+      if (importPath.node.source.value.startsWith(".")) {
+        importPath.node.source.value += ".js";
+      }
+
+      if (importPath.node.importKind === "type") {
+        importPath.node.importKind = "value";
         return;
       }
 
       // `import typeof X from` => ???
-      if (path.node.importKind === "typeof") {
+      if (importPath.node.importKind === "typeof") {
         // noop, fix manually
+        importPath.node.importKind = "value";
         return;
       }
 
       // `import {...} from`
-      if (!path.node.importKind || path.node.importKind === "value") {
+      if (
+        !importPath.node.importKind ||
+        importPath.node.importKind === "value"
+      ) {
         // `import {type X} from` => `import {X} from`
-        for (const specifier of path.node.specifiers) {
+        for (const specifier of importPath.node.specifiers) {
           if (
             specifier.type === "ImportSpecifier" &&
             specifier.importKind === "type"
           ) {
             specifier.importKind = null;
+            importPath.node.importKind = "value";
           }
         }
 
@@ -132,7 +153,9 @@ export default function migrateToTypeScript(
       }
 
       throw new Error(
-        `Unrecognized import kind: ${JSON.stringify(path.node.importKind)}`
+        `Unrecognized import kind: ${JSON.stringify(
+          importPath.node.importKind
+        )}`
       );
     },
 
@@ -215,7 +238,11 @@ export default function migrateToTypeScript(
 
       const body = migrateType(reporter, filePath, path.node.body);
       if (body.type !== "TSTypeLiteral")
-        throw new Error(`Unexpected AST node: ${JSON.stringify(body.type)} instead of TSTypeLiteral`);
+        throw new Error(
+          `Unexpected AST node: ${JSON.stringify(
+            body.type
+          )} instead of TSTypeLiteral`
+        );
 
       replaceWith(
         path,
@@ -501,7 +528,8 @@ export default function migrateToTypeScript(
         // ```ts
         // reporter.unsupportedTypeCast(filePath, path.node.expression.loc!);
         // ```
-
+        // TODO @lex just remove these casts. I've not seen code where the casting
+        // was actually needed
         const safeCast = t.callExpression(
           t.memberExpression(importUtils(path), t.identifier("cast")),
           [path.node.expression]
@@ -1005,7 +1033,11 @@ function actuallyMigrateType(
       const tsType = migrateType(reporter, filePath, flowType.argument);
 
       if (tsType.type !== "TSTypeReference")
-        throw new Error(`Unexpected AST node: ${JSON.stringify(tsType.type)} instead of TSTypeReference`);
+        throw new Error(
+          `Unexpected AST node: ${JSON.stringify(
+            tsType.type
+          )} instead of TSTypeReference`
+        );
       if (tsType.typeParameters)
         throw new Error("Unexpected type parameters on `typeof` argument.");
 
@@ -1041,19 +1073,21 @@ function actuallyMigrateType(
     case "VoidTypeAnnotation":
       return t.tsVoidKeyword();
 
-    
-    case "IndexedAccessType": { 
+    case "IndexedAccessType": {
       return t.tsIndexedAccessType(
         migrateType(reporter, filePath, flowType.objectType),
         migrateType(reporter, filePath, flowType.indexType)
       );
     }
-  
 
     default: {
       const never = flowType;
       let locStart = flowType.loc?.start;
-      throw new Error(`Unexpected AST node: ${JSON.stringify(never["type"])} at ${filePath}:${locStart?.line}:${locStart?.column}`);
+      throw new Error(
+        `Unexpected AST node: ${JSON.stringify(never["type"])} at ${filePath}:${
+          locStart?.line
+        }:${locStart?.column}`
+      );
     }
   }
 }
@@ -1185,7 +1219,9 @@ function actuallyMigrateObjectMember(
       } else {
         if (tsValue.type !== "TSFunctionType") {
           throw new Error(
-            `Unexpected AST node: ${JSON.stringify(tsValue.type)}. I wanted TSFunctionType`
+            `Unexpected AST node: ${JSON.stringify(
+              tsValue.type
+            )}. I wanted TSFunctionType`
           );
         }
 
@@ -1240,7 +1276,7 @@ function actuallyMigrateObjectMember(
       );
 
     case "IndexedAccessType":
-      throw new Error("Learning to deal with " + JSON.stringify(flowMember))
+      throw new Error("Learning to deal with " + JSON.stringify(flowMember));
 
     default: {
       const never: never = flowMember;
