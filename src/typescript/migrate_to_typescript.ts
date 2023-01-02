@@ -236,12 +236,21 @@ export default function migrateToTypeScript(
     },
 
     VariableDeclarator(path) {
-      // `let x;` → `let x: any;`
-      // `let x = {};` → `let x: {[key: string]: any} = {};`
-      // `let x = [];` → `let x: Array<any> = [];`
-      //
-      // TypeScript can’t infer the type of an unannotated variable unlike Flow. We accept
-      // lower levels of soundness in test files. We’ll manually annotate non-test files.
+      if (path.node.type === 'VariableDeclarator' 
+        && path.node.init?.type === 'CallExpression'
+        && path.node.init?.typeArguments?.type === "TypeParameterInstantiation") {
+          let typeArg = path.node.init?.typeArguments!
+          path.node.init.typeParameters = t.tsTypeParameterInstantiation(
+            typeArg.params.map(f => migrateType(reporter, filePath, f))
+          )
+          delete path.node.init.typeArguments;
+          // let asT = actuallyMigrateType(reporter, filePath, typeArg);
+          console.log("nailed it")
+          
+        
+      }
+      
+
       if (isTestFile) {
         if (
           path.parent.type === "VariableDeclaration" &&
