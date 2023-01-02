@@ -21,6 +21,19 @@ export default function migrateToTypeScript(
       exit(path) {},
     },
 
+    ClassDeclaration(path) {
+      if (path.node.superTypeParameters) {
+        path.node.superTypeParameters = t.tsTypeParameterInstantiation(
+          path.node.superTypeParameters.params.map((s) => {
+            if (t.isFlowType(s)) {
+              return migrateType(reporter, filePath, s as t.FlowType);
+            }
+            return s;
+          })
+        );
+      }
+    },
+
     /* -------------------------------------------------------------------------------------- *\
         |  Type Annotations                                                                        |
         \* -------------------------------------------------------------------------------------- */
@@ -236,20 +249,17 @@ export default function migrateToTypeScript(
     },
 
     VariableDeclarator(path) {
-      if (path.node.type === 'VariableDeclarator' 
-        && path.node.init?.type === 'CallExpression'
-        && path.node.init?.typeArguments?.type === "TypeParameterInstantiation") {
-          let typeArg = path.node.init?.typeArguments!
-          path.node.init.typeParameters = t.tsTypeParameterInstantiation(
-            typeArg.params.map(f => migrateType(reporter, filePath, f))
-          )
-          delete path.node.init.typeArguments;
-          // let asT = actuallyMigrateType(reporter, filePath, typeArg);
-          console.log("nailed it")
-          
-        
+      if (
+        path.node.type === "VariableDeclarator" &&
+        path.node.init?.type === "CallExpression" &&
+        path.node.init?.typeArguments?.type === "TypeParameterInstantiation"
+      ) {
+        let typeArg = path.node.init?.typeArguments!;
+        path.node.init.typeParameters = t.tsTypeParameterInstantiation(
+          typeArg.params.map((f) => migrateType(reporter, filePath, f))
+        );
+        delete path.node.init.typeArguments;
       }
-      
 
       if (isTestFile) {
         if (
