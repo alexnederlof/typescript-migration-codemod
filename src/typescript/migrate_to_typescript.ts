@@ -14,31 +14,11 @@ export default function migrateToTypeScript(
   // We insert `any` more frequently when migrating a test file.
   const isTestFile = filePath.endsWith(".test.js");
 
-  let shouldImportUtils = false;
-
-  function importUtils(path: NodePath<t.Node>): t.Expression {
-    if (!path.scope.hasBinding("u")) {
-      shouldImportUtils = true;
-    }
-    return t.identifier("u");
-  }
-
   const awaitPromises: Array<Promise<unknown>> = [];
 
   traverse.default(file, {
     Program: {
-      exit(path) {
-        // If we need to import the `h`/`u` utilities then add an import declaration to the
-        // top of the program.
-        if (shouldImportUtils) {
-          path.node.body.unshift(
-            t.importDeclaration(
-              [t.importDefaultSpecifier(t.identifier("u"))],
-              t.stringLiteral("client_server_shared/u")
-            )
-          );
-        }
-      },
+      exit(path) {},
     },
 
     /* -------------------------------------------------------------------------------------- *\
@@ -103,7 +83,7 @@ export default function migrateToTypeScript(
       // `import type {...} from` => `import {...} from`
 
       if (importPath.node.source.value === "styles") {
-        importPath.node.source.value = './styles'
+        importPath.node.source.value = "./styles";
       }
 
       if (importPath.node.source.value.startsWith("latitude/")) {
@@ -523,25 +503,17 @@ export default function migrateToTypeScript(
           )
         );
       } else {
-        // If you want to see all type casts which aren’t handled by the above:
-        //
-        // ```ts
-        // reporter.unsupportedTypeCast(filePath, path.node.expression.loc!);
-        // ```
-        // TODO @lex just remove these casts. I've not seen code where the casting
-        // was actually needed
-        const safeCast = t.callExpression(
-          t.memberExpression(importUtils(path), t.identifier("cast")),
-          [path.node.expression]
-        );
-        safeCast.typeParameters = t.tsTypeParameterInstantiation([
-          migrateType(
-            reporter,
-            filePath,
-            path.node.typeAnnotation.typeAnnotation
-          ),
-        ]);
-        replaceWith(path, safeCast);
+        /**
+         * Replace
+         * <code>
+         * export default (React.memo<Props>(DocumentTabs): React.AbstractComponent<
+            Props,
+            mixed
+          >);
+         * </code>
+          with React.memo<Props>(DocumentTabs)
+         */
+        replaceWith(path, path.node.expression);
       }
     },
 
